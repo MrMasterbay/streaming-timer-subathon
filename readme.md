@@ -39,7 +39,7 @@ The overlay displays:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/livestream-timer-overlay.git
+   git clone https://github.com/MrMasterbay/streaming-timer-subathon.git
    cd livestream-timer-overlay
    ```
 
@@ -124,7 +124,7 @@ Modify timer state (requires authentication).
 **Request Body:**
 ```json
 {
-  "password": "your-admin-password",
+  "password": "changeme",
   "action": "addTime",
   "minutes": 5
 }
