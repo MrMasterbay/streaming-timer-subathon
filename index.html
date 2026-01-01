@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[CHANGENAME] Livestream Timer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a0a2e 50%, #2d1b4e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .background-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .orb1 {
+            width: 300px;
+            height: 300px;
+            background: #9146ff;
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 400px;
+            height: 400px;
+            background: #ff4d6d;
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -4s;
+        }
+
+        .orb3 {
+            width: 200px;
+            height: 200px;
+            background: #00f5d4;
+            top: 50%;
+            right: 10%;
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.1); }
+        }
+
+        .container {
+            text-align: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .logo {
+            font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .logo-zock {
+            background: linear-gradient(135deg, #9146ff 0%, #ff4d6d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-station {
+            color: #00f5d4;
+            text-shadow: 0 0 30px rgba(0, 245, 212, 0.5);
+        }
+
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ff0000;
+            padding: 0.4rem 1rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+            animation: pulse-live 2s infinite;
+        }
+
+        .live-badge.paused {
+            background: #ff9800;
+            animation: none;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        .paused .live-dot {
+            animation: none;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 0, 0, 0.8); }
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.4rem);
+            color: #b0b0b0;
+            margin-bottom: 2.5rem;
+        }
+
+        .subtitle span {
+            color: #00f5d4;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: clamp(0.5rem, 3vw, 1.5rem);
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .time-block {
+            background: rgba(145, 70, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: clamp(1rem, 4vw, 1.5rem);
+            min-width: clamp(70px, 18vw, 120px);
+            border: 2px solid rgba(145, 70, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(145, 70, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .time-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .time-block:hover::before {
+            left: 100%;
+        }
+
+        .time-block:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: #9146ff;
+            box-shadow: 0 15px 40px rgba(145, 70, 255, 0.4);
+        }
+
+        .time-value {
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 900;
+            background: linear-gradient(180deg, #ffffff 0%, #9146ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-label {
+            font-size: clamp(0.6rem, 2vw, 0.85rem);
+            color: #00f5d4;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .stream-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #b0b0b0;
+        }
+
+        .info-icon {
+            font-size: 1.2rem;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9146ff, #ff4d6d, #00f5d4);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            transition: width 1s linear;
+            animation: gradient-shift 3s ease infinite;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: #b0b0b0;
+        }
+
+        .progress-text span {
+            color: #00f5d4;
+            font-weight: bold;
+        }
+
+        .finished {
+            font-size: clamp(1.5rem, 6vw, 3rem);
+            background: linear-gradient(135deg, #9146ff, #ff4d6d, #00f5d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: celebrate 0.5s ease infinite alternate;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .controller-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 50;
+        }
+
+        .credits {
+            font-size: 0.85rem;
+            color: #666;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .credits a {
+            color: #9146ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .credits a:hover {
+            color: #00f5d4;
+        }
+
+        .credits .alias {
+            color: #888;
+            font-style: italic;
+        }
+
+        .admin-toggle {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: rgba(145, 70, 255, 0.2);
+            border: 1px solid rgba(145, 70, 255, 0.4);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .admin-toggle:hover {
+            background: rgba(145, 70, 255, 0.4);
+        }
+
+        .admin-panel {
+            position: fixed;
+            bottom: 120px;
+            right: 20px;
+            background: rgba(20, 10, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(145, 70, 255, 0.4);
+            border-radius: 20px;
+            padding: 1.5rem;
+            z-index: 100;
+            display: none;
+            min-width: 280px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .admin-panel.visible {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .admin-panel h3 {
+            color: #9146ff;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .login-form input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .login-form input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #9146ff;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #9146ff, #ff4d6d);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(145, 70, 255, 0.4);
+        }
+
+        .admin-controls {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .admin-controls.visible {
+            display: flex;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 0.85rem;
+            color: #b0b0b0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .time-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .time-btn {
+            background: rgba(0, 245, 212, 0.2);
+            border: 1px solid rgba(0, 245, 212, 0.4);
+            color: #00f5d4;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .time-btn:hover {
+            background: rgba(0, 245, 212, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .time-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pause-btn {
+            background: rgba(255, 152, 0, 0.2);
+            border: 1px solid rgba(255, 152, 0, 0.4);
+            color: #ff9800;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .pause-btn:hover {
+            background: rgba(255, 152, 0, 0.4);
+        }
+
+        .pause-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pause-btn.playing {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.4);
+            color: #4caf50;
+        }
+
+        .logout-btn {
+            background: rgba(255, 77, 109, 0.2);
+            border: 1px solid rgba(255, 77, 109, 0.4);
+            color: #ff4d6d;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 77, 109, 0.4);
+        }
+
+        .error-msg {
+            color: #ff4d6d;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .error-msg.visible {
+            display: block;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .added-time {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00f5d4;
+            text-shadow: 0 0 30px rgba(0, 245, 212, 0.8);
+            pointer-events: none;
+            opacity: 0;
+            z-index: 1000;
+        }
+
+        .added-time.show {
+            animation: popUp 1.5s ease forwards;
+        }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            40% { transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -80%) scale(1); }
+        }
+
+        .paused-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .time-block.paused .paused-overlay {
+            display: flex;
+        }
+
+        .pause-icon {
+            font-size: 1.5rem;
+        }
+
+        .sync-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: #888;
+            z-index: 50;
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse-sync 2s infinite;
+        }
+
+        .sync-dot.error {
+            background: #ff4d6d;
+            animation: none;
+        }
+
+        @keyframes pulse-sync {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @media (max-width: 500px) {
+            .footer {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                transform: none;
+            }
+            
+            .admin-toggle {
+                bottom: 60px;
+                right: 10px;
+            }
+            
+            .admin-panel {
+                bottom: 110px;
+                right: 10px;
+                left: 10px;
+                min-width: auto;
+            }
+
+            .sync-indicator {
+                top: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow-orb orb1"></div>
+        <div class="glow-orb orb2"></div>
+        <div class="glow-orb orb3"></div>
+    </div>
+
+    <div class="sync-indicator">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">Live-Sync aktiv</span>
+    </div>
+
+    <div class="container">
+        <div class="controller-icon">🎮</div>
+        
+        <h1 class="logo">
+            <span class="logo-zock">Zock</span><span class="logo-station">station</span>
+        </h1>
+        
+        <div class="live-badge" id="liveBadge">
+            <span class="live-dot"></span>
+            <span id="badgeText">Livestream</span>
+        </div>
+        
+        <p class="subtitle">🔥 <span id="totalTime">34h 15min</span> Non-Stop Gaming Marathon 🔥</p>
+        
+        <div id="countdown" class="countdown">
+            <div class="time-block" id="hoursBlock">
+                <div class="time-value" id="hours">00</div>
+                <div class="time-label">Hours</div>
+                <div class="paused-overlay"><span class="pause-icon">⏸️</span></div>
+            </div>
+            <div class="time-block" id="minutesBlock">
+                <div class="time-value" id="minutes">00</div>
+                <div class="time-label">Minutes</div>
+                <div class="paused-overlay"><span class="pause-icon">⏸️</span></div>
+            </div>
+            <div class="time-block" id="secondsBlock">
+                <div class="time-value" id="seconds">00</div>
+                <div class="time-label">Seconds</div>
+                <div class="paused-overlay"><span class="pause-icon">⏸️</span></div>
+            </div>
+        </div>
+
+        <div class="stream-info">
+            <div class="info-item">
+                <span class="info-icon">📅</span>
+                <span>Start: 31.12.2025, 20:00 </span>
+            </div>
+            <div class="info-item">
+                <span class="info-icon">🏁</span>
+                <span id="endTime">End: 02.01.2026, 06:15 </span>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <p class="progress-text" id="progress-text">Stream-Progress: <span>0%</span></p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="credits">
+            Made with 💜 by <a href="#">baGStube_Nico</a> <span class="alias">alias Austrialetsplay1236</span>
+        </div>
+    </div>
+
+    <div class="added-time" id="addedTime">+5:00</div>
+
+    <button class="admin-toggle" id="adminToggle">⚙️ Admin</button>
+
+    <div class="admin-panel" id="adminPanel">
+        <h3>🔐 Admin Panel</h3>
+        
+        <div class="login-form" id="loginForm">
+            <input type="password" id="passwordInput" placeholder="Enter Password...">
+            <p class="error-msg" id="errorMsg">❌ Wrong Password!</p>
+            <button class="login-btn" id="loginBtn">Log in</button>
+        </div>
+
+        <div class="admin-controls" id="adminControls">
+            <div class="control-group">
+                <span class="control-label">⏱️ Add Time</span>
+                <div class="time-buttons">
+                    <button class="time-btn" id="btn5" onclick="addTime(5)">+5 Min</button>
+                    <button class="time-btn" id="btn10" onclick="addTime(10)">+10 Min</button>
+                    <button class="time-btn" id="btn15" onclick="addTime(15)">+15 Min</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">⏯️ Controls</span>
+                <button class="pause-btn" id="pauseBtn" onclick="togglePause()">
+                    <span id="pauseIcon">⏸️</span>
+                    <span id="pauseText">Pause the Timer</span>
+                </button>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'api.php';
+        
+        let timerData = {
+            endTime: 0,
+            isPaused: false,
+            pausedTimeRemaining: null,
+            totalDuration: 0,
+            startTime: 0
+        };
+        
+        let adminPassword = '';
+        let isLoggedIn = false;
+        let isLoading = false;
+
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginForm = document.getElementById('loginForm');
+        const adminControls = document.getElementById('adminControls');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('visible');
+        });
+
+        loginBtn.addEventListener('click', attemptLogin);
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        function attemptLogin() {
+            adminPassword = passwordInput.value;
+            isLoggedIn = true;
+            loginForm.style.display = 'none';
+            adminControls.classList.add('visible');
+            errorMsg.classList.remove('visible');
+        }
+
+        function logout() {
+            isLoggedIn = false;
+            adminPassword = '';
+            loginForm.style.display = 'flex';
+            adminControls.classList.remove('visible');
+            adminPanel.classList.remove('visible');
+            passwordInput.value = '';
+        }
+
+        async function fetchTimerData() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network error');
+                timerData = await response.json();
+                updateSyncIndicator(true);
+                updateUI();
+            } catch (error) {
+                console.error('Fehler beim Laden:', error);
+                updateSyncIndicator(false);
+            }
+        }
+
+        function updateSyncIndicator(success) {
+            const dot = document.getElementById('syncDot');
+            const text = document.getElementById('syncText');
+            if (success) {
+                dot.classList.remove('error');
+                text.textContent = 'Live-Sync aktiv';
+            } else {
+                dot.classList.add('error');
+                text.textContent = 'Verbindungsfehler';
+            }
+        }
+
+        async function sendAction(action, data = {}) {
+            if (isLoading) return;
+            isLoading = true;
+            setButtonsDisabled(true);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        password: adminPassword,
+                        action: action,
+                        ...data
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.status === 401) {
+                    errorMsg.classList.add('visible');
+                    setTimeout(() => errorMsg.classList.remove('visible'), 3000);
+                    logout();
+                    return false;
+                }
+
+                if (result.success) {
+                    timerData = result.data;
+                    updateUI();
+                    return true;
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                updateSyncIndicator(false);
+            } finally {
+                isLoading = false;
+                setButtonsDisabled(false);
+            }
+            return false;
+        }
+
+        function setButtonsDisabled(disabled) {
+            document.getElementById('btn5').disabled = disabled;
+            document.getElementById('btn10').disabled = disabled;
+            document.getElementById('btn15').disabled = disabled;
+            document.getElementById('pauseBtn').disabled = disabled;
+        }
+
+        async function addTime(minutes) {
+            if (!isLoggedIn) return;
+            const success = await sendAction('addTime', { minutes });
+            if (success) {
+                showAddedTime(minutes);
+            }
+        }
+
+        function showAddedTime(minutes) {
+            const addedTimeEl = document.getElementById('addedTime');
+            addedTimeEl.textContent = `+${minutes}:00`;
+            addedTimeEl.classList.remove('show');
+            void addedTimeEl.offsetWidth;
+            addedTimeEl.classList.add('show');
+        }
+
+        async function togglePause() {
+            if (!isLoggedIn) return;
+            const action = timerData.isPaused ? 'resume' : 'pause';
+            await sendAction(action);
+        }
+
+        function updateUI() {
+            updateTotalTimeDisplay();
+            updatePauseUI();
+            updateCountdown();
+        }
+
+        function updateTotalTimeDisplay() {
+            const totalMinutes = Math.floor(timerData.totalDuration / (1000 * 60));
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            document.getElementById('totalTime').textContent = `${hours}h ${mins}min`;
+            
+            const end = new Date(timerData.endTime);
+            const day = String(end.getDate()).padStart(2, '0');
+            const month = String(end.getMonth() + 1).padStart(2, '0');
+            const year = end.getFullYear();
+            const hour = String(end.getHours()).padStart(2, '0');
+            const minute = String(end.getMinutes()).padStart(2, '0');
+            document.getElementById('endTime').textContent = `Ende: ${day}.${month}.${year}, ${hour}:${minute} Uhr`;
+        }
+
+        function updatePauseUI() {
+            const pauseIcon = document.getElementById('pauseIcon');
+            const pauseText = document.getElementById('pauseText');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const liveBadge = document.getElementById('liveBadge');
+            const badgeText = document.getElementById('badgeText');
+            
+            if (timerData.isPaused) {
+                pauseIcon.textContent = '▶️';
+                pauseText.textContent = 'Fortsetzen';
+                pauseBtn.classList.add('playing');
+                liveBadge.classList.add('paused');
+                badgeText.textContent = 'Pausiert';
+                
+                document.getElementById('hoursBlock').classList.add('paused');
+                document.getElementById('minutesBlock').classList.add('paused');
+                document.getElementById('secondsBlock').classList.add('paused');
+            } else {
+                pauseIcon.textContent = '⏸️';
+                pauseText.textContent = 'Pausieren';
+                pauseBtn.classList.remove('playing');
+                liveBadge.classList.remove('paused');
+                badgeText.textContent = 'Livestream';
+                
+                document.getElementById('hoursBlock').classList.remove('paused');
+                document.getElementById('minutesBlock').classList.remove('paused');
+                document.getElementById('secondsBlock').classList.remove('paused');
+            }
+        }
+
+        function updateCountdown() {
+            const now = Date.now();
+            let remaining;
+            let elapsed;
+            
+            if (now < timerData.startTime && !timerData.isPaused) {
+                document.getElementById('hours').textContent = '34';
+                document.getElementById('minutes').textContent = '15';
+                document.getElementById('seconds').textContent = '00';
+                document.getElementById('progress').style.width = '0%';
+                document.getElementById('progress-text').innerHTML = 'Stream startet am <span>31.12.2025 um 20:00 Uhr</span>';
+                return;
+            }
+            
+            if (timerData.isPaused) {
+                remaining = timerData.pausedTimeRemaining;
+                elapsed = timerData.totalDuration - timerData.pausedTimeRemaining;
+            } else {
+                remaining = timerData.endTime - now;
+                elapsed = now - timerData.startTime;
+            }
+            
+            if (remaining <= 0 && !timerData.isPaused) {
+                document.getElementById('countdown').innerHTML = '<div class="finished">🎉 GG! Stream beendet! 🎉</div>';
+                document.getElementById('progress').style.width = '100%';
+                document.getElementById('progress-text').innerHTML = 'Stream-Fortschritt: <span>100% - GESCHAFFT!</span>';
+                return;
+            }
+            
+            const percentage = Math.min(Math.max((elapsed / timerData.totalDuration) * 100, 0), 100);
+            
+            const hours = Math.floor(remaining / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+            
+            document.getElementById('hours').textContent = String(Math.max(0, hours)).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(Math.max(0, minutes)).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(Math.max(0, seconds)).padStart(2, '0');
+            
+            document.getElementById('progress').style.width = percentage.toFixed(2) + '%';
+            document.getElementById('progress-text').innerHTML = 'Stream-Fortschritt: <span>' + percentage.toFixed(1) + '%</span>';
+        }
+
+        // Initial laden
+        fetchTimerData();
+
+        // Alle 2 Sekunden vom Server aktualisieren
+        setInterval(fetchTimerData, 2000);
+
+        // Countdown jede Sekunde lokal aktualisieren (für flüssige Anzeige)
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
