@@ -40,7 +40,7 @@ The overlay displays:
 1. **Clone the repository**
    ```bash
    git clone https://github.com/MrMasterbay/streaming-timer-subathon.git
-   cd livestream-timer-overlay
+   cd streaming-timer-subathon
    ```
 
 2. **Configure the API** (`api.php`)
